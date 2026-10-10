@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexHub - Markets & Learning Terminal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spin-slow 0.8s linear infinite;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-600/30">
+          <i data-lucide="terminal" class="w-5 h-5"></i>
+        </div>
+        <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">ApexDesk</span>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-2 bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+        <button id="tab-btn-markets" onclick="switchTab('markets')" class="px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all bg-indigo-600 text-white shadow">
+          <span class="flex items-center gap-1.5"><i data-lucide="trending-up" class="w-4 h-4"></i> Markets</span>
+        </button>
+        <button id="tab-btn-ssc" onclick="switchTab('ssc')" class="px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white">
+          <span class="flex items-center gap-1.5"><i data-lucide="book-open" class="w-4 h-4"></i> SSC Study</span>
+        </button>
+        <button id="tab-btn-quotes" onclick="switchTab('quotes')" class="px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white">
+          <span class="flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4"></i> Mindset</span>
+        </button>
+      </nav>
+
+      <!-- Global Actions -->
+      <div class="flex items-center space-x-2">
+        <button id="global-refresh-btn" onclick="triggerGlobalRefresh()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition active:scale-95 shadow">
+          <i id="refresh-icon" data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span id="refresh-label" class="hidden sm:inline">Refresh Data</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="status-banner" class="hidden bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-1.5 text-center text-xs font-medium text-emerald-400">
+    <span id="status-text">Latest news and market indices updated successfully.</span>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+    <!-- ================= SECTION 1: MARKETS & GLOBAL DESK ================= -->
+    <div id="section-markets" class="space-y-6">
+      
+      <!-- Global Macro Tickers Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" id="ticker-grid">
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">NIFTY 50</div>
+          <div class="text-lg font-bold text-white mt-1">24,850.40</div>
+          <div class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-up-right" class="w-3 h-3"></i> +0.65%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">S&P 500</div>
+          <div class="text-lg font-bold text-white mt-1">5,751.13</div>
+          <div class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-up-right" class="w-3 h-3"></i> +0.42%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">NASDAQ 100</div>
+          <div class="text-lg font-bold text-white mt-1">20,048.20</div>
+          <div class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-up-right" class="w-3 h-3"></i> +0.81%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">US DXY Index</div>
+          <div class="text-lg font-bold text-white mt-1">102.35</div>
+          <div class="text-xs font-semibold text-rose-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-down-right" class="w-3 h-3"></i> -0.18%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">Brent Crude</div>
+          <div class="text-lg font-bold text-white mt-1">$74.45</div>
+          <div class="text-xs font-semibold text-rose-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-down-right" class="w-3 h-3"></i> -0.85%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">US 10Y Yield</div>
+          <div class="text-lg font-bold text-white mt-1">4.02%</div>
+          <div class="text-xs font-semibold text-slate-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="minus" class="w-3 h-3"></i> 0.00 bps
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Global Trader Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Live Market News Desk (2 Columns) -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h2 class="text-lg font-semibold text-white">Live News & Sentiment Wire</h2>
+            </div>
+            <span class="text-xs font-medium text-slate-500">Auto-updates on refresh</span>
+          </div>
+
+          <div id="news-container" class="space-y-3">
+            <!-- News cards inserted dynamically -->
+          </div>
+        </div>
+
+        <!-- Global Macro & Order Flow (1 Column) -->
+        <div class="space-y-4">
+          <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+            <i data-lucide="globe-2" class="w-4 h-4 text-indigo-400"></i> Global Trader Terminal
+          </h2>
+
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Macro Calendar & Triggers</h3>
+            
+            <div class="space-y-3 text-sm">
+              <div class="p-3 bg-slate-800/60 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                  <span>US FOMC Rate Decision</span>
+                  <span class="text-amber-400 font-semibold">High Impact</span>
+                </div>
+                <div class="mt-1 font-medium text-slate-200">Target Range: 4.75% - 5.00%</div>
+                <div class="text-xs text-slate-400 mt-1">Probability of 25 bps cut: 86.4%</div>
+              </div>
+
+              <div class="p-3 bg-slate-800/60 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                  <span>RBI MPC Inflation Outlook</span>
+                  <span class="text-indigo-400 font-semibold">Macro Neutral</span>
+                </div>
+                <div class="mt-1 font-medium text-slate-200">Repo Rate: 6.50% steady</div>
+                <div class="text-xs text-slate-400 mt-1">Liquidity stance adjusted to neutral</div>
+              </div>
+
+              <div class="p-3 bg-slate-800/60 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                  <span>Crude Supply & OPEC+ Output</span>
+                  <span class="text-emerald-400 font-semibold">Bearish Crude</span>
+                </div>
+                <div class="mt-1 font-medium text-slate-200">Voluntary cuts unwinding schedule</div>
+                <div class="text-xs text-slate-400 mt-1">Inventory build-up observed at Cushing</div>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800">
+              <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2">Key Risk Levels</div>
+              <div class="flex justify-between text-xs py-1 border-b border-slate-800/50">
+                <span class="text-slate-400">India VIX</span>
+                <span class="font-bold text-emerald-400">12.84 (Complacent)</span>
+              </div>
+              <div class="flex justify-between text-xs py-1 border-b border-slate-800/50">
+                <span class="text-slate-400">Gift Nifty Premium</span>
+                <span class="font-bold text-white">+38 pts</span>
+              </div>
+              <div class="flex justify-between text-xs py-1">
+                <span class="text-slate-400">FII / DII Flow (Net)</span>
+                <span class="font-bold text-emerald-400">+₹1,480 Cr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ================= SECTION 2: SSC SYLLABUS & FOCUS TIMER ================= -->
+    <div id="section-ssc" class="hidden space-y-6">
+      
+      <!-- Timer HUD Banner -->
+      <div id="timer-hud" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/30 p-5 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+            <i data-lucide="timer" class="w-4 h-4"></i> Active Topic Focus Timer
+          </span>
+          <h3 id="active-topic-name" class="text-xl font-bold text-white mt-1">No topic active</h3>
+          <p id="active-subject-name" class="text-xs text-slate-400">Pick any topic below and click Start to begin your targeted countdown session.</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="text-4xl sm:text-5xl font-mono font-bold tracking-wider text-indigo-300" id="timer-display">
+            00:00
+          </div>
+          <div class="flex flex-col gap-2">
+            <button id="timer-cancel-btn" onclick="stopActiveTimer()" class="hidden px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition active:scale-95 shadow">
+              Stop Timer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Syllabus & Topics Browser -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-white">SSC Examination Syllabus Tracker</h2>
+            <p class="text-xs text-slate-400">Tier-1 & Tier-2 Comprehensive Subject Breakdown with Topic-Level Timers</p>
+          </div>
+        </div>
+
+        <!-- Subject Accordion / Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="syllabus-container">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ================= SECTION 3: MINDSET & QUOTE VAULT ================= -->
+    <div id="section-quotes" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Mindset, Philosophy & Wisdom Vault</h2>
+          <p class="text-xs text-slate-400">Curated reflections on trading psychology, rigorous study, and personal resilience.</p>
+        </div>
+        <button onclick="triggerQuotePopup(true)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition active:scale-95 shadow flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Trigger Popup
+        </button>
+      </div>
+
+      <!-- Quote Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="quotes-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Quote Reminder Modal -->
+  <div id="quote-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 transform transition-all scale-100">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <span id="modal-category" class="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+          Philosophy
+        </span>
+        <button onclick="closeQuoteModal()" class="text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <blockquote id="modal-quote" class="text-lg font-medium text-slate-100 leading-relaxed italic">
+          "We suffer more often in imagination than in reality."
+        </blockquote>
+        <div class="text-sm font-semibold text-indigo-400" id="modal-author">
+          — Seneca
+        </div>
+        <p id="modal-context" class="text-xs text-slate-400 bg-slate-800/60 p-3 rounded-lg border border-slate-800 leading-relaxed">
+          Stoic philosopher advising Lucilius on overcoming unnecessary anxiety and mental turbulence before actual difficulties arise.
+        </p>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeQuoteModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition active:scale-95">
+          Acknowledge & Focus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Tone for Timer Complete (Synthesized Web Audio API) -->
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // ================= DATA REPOSITORIES =================
+
+    // 1. Initial News Stream
+    const baseNews = [
+      {
+        id: 1,
+        title: "Federal Reserve hints at calibrated balance sheet run-off pace",
+        source: "Global Macro Desk",
+        time: "Just now",
+        sentiment: "Bullish",
+        tag: "Monetary Policy",
+        summary: "FOMC minutes underscore solid economic baseline while monitoring labor market sensitivity."
+      },
+      {
+        id: 2,
+        title: "Domestic manufacturing PMI surges to multi-quarter highs",
+        source: "Economic Bureau",
+        time: "12m ago",
+        sentiment: "Bullish",
+        tag: "Equities",
+        summary: "New export orders and capital expenditure outlays register sustained expansion."
+      },
+      {
+        id: 3,
+        title: "Crude oil slips below key technical support as inventory builds",
+        source: "Commodity Pulse",
+        time: "34m ago",
+        sentiment: "Neutral",
+        tag: "Commodities",
+        summary: "OPEC+ members maintain scheduled output timeline, curbing immediate upside risks."
+      }
+    ];
+
+    // Additional news items served upon Refresh
+    const freshNewsPool = [
+      {
+        id: 4,
+        title: "Tech sector leads global bounce as semiconductor demand rebounds",
+        source: "Nasdaq Wire",
+        time: "1m ago",
+        sentiment: "Bullish",
+        tag: "Tech Equities",
+        summary: "Enterprise AI server procurement drives sustained volume across key chipmakers."
+      },
+      {
+        id: 5,
+        title: "Currency volatility cools; Dollar index stabilizes near key 200-EMA",
+        source: "FX Terminal",
+        time: "4m ago",
+        sentiment: "Neutral",
+        tag: "Forex",
+        summary: "Cross-asset traders observe tightening standard deviation bands in major pairs."
+      },
+      {
+        id: 6,
+        title: "Retail inflation reading prints within central bank's tolerance band",
+        source: "Macro Insight",
+        time: "6m ago",
+        sentiment: "Bullish",
+        tag: "Inflation",
+        summary: "Food commodity softening offsets minor seasonal cost pressures in core services."
+      }
+    ];
+
+    // 2. SSC Syllabus Data Structure with Default Topic Times (in minutes)
+    const sscSyllabus = [
+      {
+        id: "quant",
+        name: "Quantitative Aptitude",
+        topics: [
+          { name: "Percentages & Fractions", duration: 30 },
+          { name: "Profit, Loss & Discount", duration: 40 },
+          { name: "Ratio, Proportion & Mixture", duration: 35 },
+          { name: "Time, Speed & Distance", duration: 45 },
+          { name: "Trigonometry & Heights", duration: 50 },
+          { name: "Geometry & Coordinate Lines", duration: 60 }
+        ]
+      },
+      {
+        id: "reasoning",
+        name: "General Intelligence & Reasoning",
+        topics: [
+          { name: "Syllogism & Deductive Logic", duration: 25 },
+          { name: "Coding-Decoding & Analogy", duration: 20 },
+          { name: "Blood Relations & Family Trees", duration: 25 },
+          { name: "Seating Arrangement & Puzzles", duration: 40 },
+          { name: "Non-Verbal & Pattern Folding", duration: 25 }
+        ]
+      },
+      {
+        id: "english",
+        name: "English Comprehension",
+        topics: [
+          { name: "Reading Comprehension Strategy", duration: 30 },
+          { name: "Error Spotting & Subject-Verb Agreement", duration: 25 },
+          { name: "Cloze Test & Context Clues", duration: 20 },
+          { name: "Idioms, Phrases & One Word Substitutions", duration: 30 },
+          { name: "Active / Passive Voice & Direct Speech", duration: 30 }
+        ]
+      },
+      {
+        id: "ga",
+        name: "General Awareness",
+        topics: [
+          { name: "Indian Polity: Constitution & Articles", duration: 40 },
+          { name: "Modern Indian History & Freedom Struggle", duration: 45 },
+          { name: "Physical & Economic Geography", duration: 35 },
+          { name: "General Science: Physics & Biology Core", duration: 35 },
+          { name: "Current Affairs & Government Schemes", duration: 30 }
+        ]
+      }
+    ];
+
+    // 3. Motivational, Stoic & Logical Trading Quotes
+    const quotesCollection = [
+      {
+        category: "Logical Trading",
+        quote: "The goal of a successful trader is to make the best trades. Money is secondary.",
+        author: "Dr. Alexander Elder",
+        context: "From 'Trading for a Living' — emphasizing that disciplined adherence to rules and risk management precedes financial gain."
+      },
+      {
+        category: "Philosophy & Stoicism",
+        quote: "We suffer more often in imagination than in reality.",
+        author: "Seneca",
+        context: "Letters from a Stoic — written to remind thinkers that excessive worry creates false burdens ahead of actual events."
+      },
+      {
+        category: "Consistent Studying",
+        quote: "Success is nothing more than a few simple disciplines, practiced every day.",
+        author: "Jim Rohn",
+        context: "Focuses on compounding effort over intermittent heroic sprints during intense competitive preparation."
+      },
+      {
+        category: "Optimistic Resilience",
+        quote: "The impediment to action advances action. What stands in the way becomes the way.",
+        author: "Marcus Aurelius",
+        context: "Meditations Book 5 — practical philosophy for using setbacks as direct material for character growth."
+      },
+      {
+        category: "Deep Focus",
+        quote: "Clarity about what matters provides clarity about what does not.",
+        author: "Cal Newport",
+        context: "From 'Deep Work' — guiding students and professionals to eliminate distraction to achieve cognitive mastery."
+      },
+      {
+        category: "Mindset & Execution",
+        quote: "You do not rise to the level of your goals. You fall to the level of your systems.",
+        author: "James Clear",
+        context: "From 'Atomic Habits' — emphasizing process architectures over passive wishful thinking."
+      }
+    ];
+
+    // ================= STATE MANAGEMENT =================
+    let newsState = [...baseNews];
+    let poolIndex = 0;
+    let timerState = {
+      intervalId: null,
+      remainingSeconds: 0,
+      topicName: "",
+      subjectName: ""
+    };
+
+    // ================= UI RENDER FUNCTIONS =================
+
+    // Render News Wire
+    function renderNews() {
+      const container = document.getElementById('news-container');
+      container.innerHTML = newsState.map(item => `
+        <article class="bg-slate-900 border border-slate-800 hover:border-slate-700/80 p-4 rounded-xl transition duration-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="font-semibold text-slate-400 uppercase tracking-wider">${item.tag}</span>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                item.sentiment === 'Bullish' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                item.sentiment === 'Bearish' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                'bg-slate-700/40 text-slate-300 border border-slate-600/40'
+              }">${item.sentiment}</span>
+              <span class="text-slate-500">${item.time}</span>
+            </div>
+          </div>
+          <h4 class="text-sm font-semibold text-white leading-snug">${item.title}</h4>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${item.summary}</p>
+          <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Wire: ${item.source}</span>
+            <span class="text-indigo-400 font-medium cursor-pointer hover:underline">Analysis Desk &rarr;</span>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    // Render SSC Syllabus Grid
+    function renderSyllabus() {
+      const container = document.getElementById('syllabus-container');
+      container.innerHTML = sscSyllabus.map(sub => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 class="font-bold text-sm text-indigo-300 flex items-center gap-2">
+              <i data-lucide="folder-check" class="w-4 h-4 text-indigo-400"></i> ${sub.name}
+            </h3>
+            <span class="text-xs text-slate-500">${sub.topics.length} Modules</span>
+          </div>
+          <ul class="space-y-2">
+            ${sub.topics.map(topic => `
+              <li class="flex items-center justify-between bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 p-2.5 rounded-lg text-xs transition">
+                <div>
+                  <div class="font-medium text-slate-200">${topic.name}</div>
+                  <div class="text-[11px] text-slate-400">${topic.duration} Min Target Session</div>
+                </div>
+                <button onclick="startTopicTimer('${topic.name}', '${sub.name}',${topic.duration})" class="px-2.5 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold rounded-md transition active:scale-95 flex items-center gap-1">
+                  <i data-lucide="play" class="w-3 h-3"></i> Start
+                </button>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `).join('');
+    }
+
+    // Render Mindset Quotes Grid
+    function renderQuotes() {
+      const grid = document.getElementById('quotes-grid');
+      grid.innerHTML = quotesCollection.map(q => `
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950/60 border border-indigo-800/50 px-2 py-0.5 rounded">
+              ${q.category}
+            </span>
+            <p class="text-sm font-medium text-slate-200 italic leading-relaxed">"${q.quote}"</p>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-indigo-300">— ${q.author}</div>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">${q.context}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ================= TIMER LOGIC =================
+    function startTopicTimer(topicName, subjectName, durationMinutes) {
+      if (timerState.intervalId) {
+        clearInterval(timerState.intervalId);
+      }
+
+      timerState.topicName = topicName;
+      timerState.subjectName = subjectName;
+      timerState.remainingSeconds = durationMinutes * 60;
+
+      document.getElementById('active-topic-name').textContent = topicName;
+      document.getElementById('active-subject-name').textContent = `Subject: ${subjectName}`;
+      document.getElementById('timer-cancel-btn').classList.remove('hidden');
+
+      updateTimerHUD();
+
+      // Scroll smoothly to timer HUD
+      document.getElementById('timer-hud').scrollIntoView({ behavior: 'smooth' });
+
+      timerState.intervalId = setInterval(() => {
+        if (timerState.remainingSeconds > 0) {
+          timerState.remainingSeconds--;
+          updateTimerHUD();
+        } else {
+          clearInterval(timerState.intervalId);
+          timerState.intervalId = null;
+          playCompletionChime();
+          alert(`Target session completed for: ${topicName}`);
+          document.getElementById('timer-cancel-btn').classList.add('hidden');
+        }
+      }, 1000);
+    }
+
+    function stopActiveTimer() {
+      if (timerState.intervalId) {
+        clearInterval(timerState.intervalId);
+        timerState.intervalId = null;
+      }
+      timerState.remainingSeconds = 0;
+      document.getElementById('active-topic-name').textContent = "Timer Stopped";
+      document.getElementById('active-subject-name').textContent = "Session manually ended.";
+      document.getElementById('timer-display').textContent = "00:00";
+      document.getElementById('timer-cancel-btn').classList.add('hidden');
+    }
+
+    function updateTimerHUD() {
+      const minutes = Math.floor(timerState.remainingSeconds / 60);
+      const seconds = timerState.remainingSeconds % 60;
+      document.getElementById('timer-display').textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function playCompletionChime() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.8);
+      } catch (e) {
+        console.log('Audio chime unavailable', e);
+      }
+    }
+
+    // ================= REFRESH BUTTON WITH DYNAMIC INJECTION =================
+    function triggerGlobalRefresh() {
+      const icon = document.getElementById('refresh-icon');
+      const label = document.getElementById('refresh-label');
+      const banner = document.getElementById('status-banner');
+      const statusText = document.getElementById('status-text');
+
+      // Spin animation
+      icon.classList.add('animate-spin-custom');
+      label.textContent = "Updating...";
+
+      setTimeout(() => {
+        // Prepend new news item
+        if (poolIndex < freshNewsPool.length) {
+          newsState.unshift(freshNewsPool[poolIndex]);
+          poolIndex = (poolIndex + 1) % freshNewsPool.length;
+        } else {
+          // If all pool items have been shown, simulate minor price jitter
+          const randomIdx = Math.floor(Math.random() * newsState.length);
+          newsState[randomIdx].time = "1m ago";
+        }
+
+        renderNews();
+        lucide.createIcons();
+
+        // Restore button state
+        icon.classList.remove('animate-spin-custom');
+        label.textContent = "Refresh Data";
+
+        // Display banner
+        banner.classList.remove('hidden');
+        statusText.textContent = "Data synced: Real-time global wire and indices up to date.";
+        setTimeout(() => {
+          banner.classList.add('hidden');
+        }, 3500);
+
+      }, 600);
+    }
+
+    // ================= QUOTE MODAL REMINDER ENGINE =================
+    function triggerQuotePopup(manual = false) {
+      const randomQuote = quotesCollection[Math.floor(Math.random() * quotesCollection.length)];
+      document.getElementById('modal-category').textContent = randomQuote.category;
+      document.getElementById('modal-quote').textContent = `"${randomQuote.quote}"`;
+      document.getElementById('modal-author').textContent = `— ${randomQuote.author}`;
+      document.getElementById('modal-context').textContent = randomQuote.context;
+      document.getElementById('quote-modal').classList.remove('hidden');
+    }
+
+    function closeQuoteModal() {
+      document.getElementById('quote-modal').classList.add('hidden');
+    }
+
+    // Automatic periodic quote reminder (triggers every 8 minutes)
+    setInterval(() => {
+      triggerQuotePopup(false);
+    }, 8 * 60 * 1000);
+
+    // ================= TAB SWITCHING =================
+    function switchTab(tabKey) {
+      const tabs = ['markets', 'ssc', 'quotes'];
+      tabs.forEach(key => {
+        const section = document.getElementById(`section-${key}`);
+        const btn = document.getElementById(`tab-btn-${key}`);
+        if (key === tabKey) {
+          section.classList.remove('hidden');
+          btn.className = "px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all bg-indigo-600 text-white shadow";
+        } else {
+          section.classList.add('hidden');
+          btn.className = "px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white";
+        }
+      });
+      lucide.createIcons();
+    }
+
+    // ================= INITIALIZATION =================
+    window.addEventListener('DOMContentLoaded', () => {
+      renderNews();
+      renderSyllabus();
+      renderQuotes();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexHub - Markets & Learning Terminal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-spin-custom {
+      animation: spin-slow 0.8s linear infinite;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-600/30">
+          <i data-lucide="terminal" class="w-5 h-5"></i>
+        </div>
+        <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">ApexDesk</span>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-2 bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+        <button id="tab-btn-markets" onclick="switchTab('markets')" class="px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all bg-indigo-600 text-white shadow">
+          <span class="flex items-center gap-1.5"><i data-lucide="trending-up" class="w-4 h-4"></i> Markets</span>
+        </button>
+        <button id="tab-btn-ssc" onclick="switchTab('ssc')" class="px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white">
+          <span class="flex items-center gap-1.5"><i data-lucide="book-open" class="w-4 h-4"></i> SSC Study</span>
+        </button>
+        <button id="tab-btn-quotes" onclick="switchTab('quotes')" class="px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white">
+          <span class="flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4"></i> Mindset</span>
+        </button>
+      </nav>
+
+      <!-- Global Actions -->
+      <div class="flex items-center space-x-2">
+        <button id="global-refresh-btn" onclick="triggerGlobalRefresh()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition active:scale-95 shadow">
+          <i id="refresh-icon" data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span id="refresh-label" class="hidden sm:inline">Refresh Data</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="status-banner" class="hidden bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-1.5 text-center text-xs font-medium text-emerald-400">
+    <span id="status-text">Latest news and market indices updated successfully.</span>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+    <!-- ================= SECTION 1: MARKETS & GLOBAL DESK ================= -->
+    <div id="section-markets" class="space-y-6">
+      
+      <!-- Global Macro Tickers Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" id="ticker-grid">
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">NIFTY 50</div>
+          <div class="text-lg font-bold text-white mt-1">24,850.40</div>
+          <div class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-up-right" class="w-3 h-3"></i> +0.65%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">S&P 500</div>
+          <div class="text-lg font-bold text-white mt-1">5,751.13</div>
+          <div class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-up-right" class="w-3 h-3"></i> +0.42%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">NASDAQ 100</div>
+          <div class="text-lg font-bold text-white mt-1">20,048.20</div>
+          <div class="text-xs font-semibold text-emerald-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-up-right" class="w-3 h-3"></i> +0.81%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">US DXY Index</div>
+          <div class="text-lg font-bold text-white mt-1">102.35</div>
+          <div class="text-xs font-semibold text-rose-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-down-right" class="w-3 h-3"></i> -0.18%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">Brent Crude</div>
+          <div class="text-lg font-bold text-white mt-1">$74.45</div>
+          <div class="text-xs font-semibold text-rose-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="arrow-down-right" class="w-3 h-3"></i> -0.85%
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-sm">
+          <div class="text-xs text-slate-400 font-medium">US 10Y Yield</div>
+          <div class="text-lg font-bold text-white mt-1">4.02%</div>
+          <div class="text-xs font-semibold text-slate-400 flex items-center gap-0.5 mt-0.5">
+            <i data-lucide="minus" class="w-3 h-3"></i> 0.00 bps
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced Global Trader Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Live Market News Desk (2 Columns) -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h2 class="text-lg font-semibold text-white">Live News & Sentiment Wire</h2>
+            </div>
+            <span class="text-xs font-medium text-slate-500">Auto-updates on refresh</span>
+          </div>
+
+          <div id="news-container" class="space-y-3">
+            <!-- News cards inserted dynamically -->
+          </div>
+        </div>
+
+        <!-- Global Macro & Order Flow (1 Column) -->
+        <div class="space-y-4">
+          <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+            <i data-lucide="globe-2" class="w-4 h-4 text-indigo-400"></i> Global Trader Terminal
+          </h2>
+
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Macro Calendar & Triggers</h3>
+            
+            <div class="space-y-3 text-sm">
+              <div class="p-3 bg-slate-800/60 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                  <span>US FOMC Rate Decision</span>
+                  <span class="text-amber-400 font-semibold">High Impact</span>
+                </div>
+                <div class="mt-1 font-medium text-slate-200">Target Range: 4.75% - 5.00%</div>
+                <div class="text-xs text-slate-400 mt-1">Probability of 25 bps cut: 86.4%</div>
+              </div>
+
+              <div class="p-3 bg-slate-800/60 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                  <span>RBI MPC Inflation Outlook</span>
+                  <span class="text-indigo-400 font-semibold">Macro Neutral</span>
+                </div>
+                <div class="mt-1 font-medium text-slate-200">Repo Rate: 6.50% steady</div>
+                <div class="text-xs text-slate-400 mt-1">Liquidity stance adjusted to neutral</div>
+              </div>
+
+              <div class="p-3 bg-slate-800/60 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                  <span>Crude Supply & OPEC+ Output</span>
+                  <span class="text-emerald-400 font-semibold">Bearish Crude</span>
+                </div>
+                <div class="mt-1 font-medium text-slate-200">Voluntary cuts unwinding schedule</div>
+                <div class="text-xs text-slate-400 mt-1">Inventory build-up observed at Cushing</div>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-800">
+              <div class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2">Key Risk Levels</div>
+              <div class="flex justify-between text-xs py-1 border-b border-slate-800/50">
+                <span class="text-slate-400">India VIX</span>
+                <span class="font-bold text-emerald-400">12.84 (Complacent)</span>
+              </div>
+              <div class="flex justify-between text-xs py-1 border-b border-slate-800/50">
+                <span class="text-slate-400">Gift Nifty Premium</span>
+                <span class="font-bold text-white">+38 pts</span>
+              </div>
+              <div class="flex justify-between text-xs py-1">
+                <span class="text-slate-400">FII / DII Flow (Net)</span>
+                <span class="font-bold text-emerald-400">+₹1,480 Cr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ================= SECTION 2: SSC SYLLABUS & FOCUS TIMER ================= -->
+    <div id="section-ssc" class="hidden space-y-6">
+      
+      <!-- Timer HUD Banner -->
+      <div id="timer-hud" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/30 p-5 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+            <i data-lucide="timer" class="w-4 h-4"></i> Active Topic Focus Timer
+          </span>
+          <h3 id="active-topic-name" class="text-xl font-bold text-white mt-1">No topic active</h3>
+          <p id="active-subject-name" class="text-xs text-slate-400">Pick any topic below and click Start to begin your targeted countdown session.</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="text-4xl sm:text-5xl font-mono font-bold tracking-wider text-indigo-300" id="timer-display">
+            00:00
+          </div>
+          <div class="flex flex-col gap-2">
+            <button id="timer-cancel-btn" onclick="stopActiveTimer()" class="hidden px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition active:scale-95 shadow">
+              Stop Timer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Syllabus & Topics Browser -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-white">SSC Examination Syllabus Tracker</h2>
+            <p class="text-xs text-slate-400">Tier-1 & Tier-2 Comprehensive Subject Breakdown with Topic-Level Timers</p>
+          </div>
+        </div>
+
+        <!-- Subject Accordion / Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="syllabus-container">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ================= SECTION 3: MINDSET & QUOTE VAULT ================= -->
+    <div id="section-quotes" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-white">Mindset, Philosophy & Wisdom Vault</h2>
+          <p class="text-xs text-slate-400">Curated reflections on trading psychology, rigorous study, and personal resilience.</p>
+        </div>
+        <button onclick="triggerQuotePopup(true)" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition active:scale-95 shadow flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Trigger Popup
+        </button>
+      </div>
+
+      <!-- Quote Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="quotes-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Quote Reminder Modal -->
+  <div id="quote-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 transform transition-all scale-100">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <span id="modal-category" class="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+          Philosophy
+        </span>
+        <button onclick="closeQuoteModal()" class="text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <blockquote id="modal-quote" class="text-lg font-medium text-slate-100 leading-relaxed italic">
+          "We suffer more often in imagination than in reality."
+        </blockquote>
+        <div class="text-sm font-semibold text-indigo-400" id="modal-author">
+          — Seneca
+        </div>
+        <p id="modal-context" class="text-xs text-slate-400 bg-slate-800/60 p-3 rounded-lg border border-slate-800 leading-relaxed">
+          Stoic philosopher advising Lucilius on overcoming unnecessary anxiety and mental turbulence before actual difficulties arise.
+        </p>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeQuoteModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition active:scale-95">
+          Acknowledge & Focus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Tone for Timer Complete (Synthesized Web Audio API) -->
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // ================= DATA REPOSITORIES =================
+
+    // 1. Initial News Stream
+    const baseNews = [
+      {
+        id: 1,
+        title: "Federal Reserve hints at calibrated balance sheet run-off pace",
+        source: "Global Macro Desk",
+        time: "Just now",
+        sentiment: "Bullish",
+        tag: "Monetary Policy",
+        summary: "FOMC minutes underscore solid economic baseline while monitoring labor market sensitivity."
+      },
+      {
+        id: 2,
+        title: "Domestic manufacturing PMI surges to multi-quarter highs",
+        source: "Economic Bureau",
+        time: "12m ago",
+        sentiment: "Bullish",
+        tag: "Equities",
+        summary: "New export orders and capital expenditure outlays register sustained expansion."
+      },
+      {
+        id: 3,
+        title: "Crude oil slips below key technical support as inventory builds",
+        source: "Commodity Pulse",
+        time: "34m ago",
+        sentiment: "Neutral",
+        tag: "Commodities",
+        summary: "OPEC+ members maintain scheduled output timeline, curbing immediate upside risks."
+      }
+    ];
+
+    // Additional news items served upon Refresh
+    const freshNewsPool = [
+      {
+        id: 4,
+        title: "Tech sector leads global bounce as semiconductor demand rebounds",
+        source: "Nasdaq Wire",
+        time: "1m ago",
+        sentiment: "Bullish",
+        tag: "Tech Equities",
+        summary: "Enterprise AI server procurement drives sustained volume across key chipmakers."
+      },
+      {
+        id: 5,
+        title: "Currency volatility cools; Dollar index stabilizes near key 200-EMA",
+        source: "FX Terminal",
+        time: "4m ago",
+        sentiment: "Neutral",
+        tag: "Forex",
+        summary: "Cross-asset traders observe tightening standard deviation bands in major pairs."
+      },
+      {
+        id: 6,
+        title: "Retail inflation reading prints within central bank's tolerance band",
+        source: "Macro Insight",
+        time: "6m ago",
+        sentiment: "Bullish",
+        tag: "Inflation",
+        summary: "Food commodity softening offsets minor seasonal cost pressures in core services."
+      }
+    ];
+
+    // 2. SSC Syllabus Data Structure with Default Topic Times (in minutes)
+    const sscSyllabus = [
+      {
+        id: "quant",
+        name: "Quantitative Aptitude",
+        topics: [
+          { name: "Percentages & Fractions", duration: 30 },
+          { name: "Profit, Loss & Discount", duration: 40 },
+          { name: "Ratio, Proportion & Mixture", duration: 35 },
+          { name: "Time, Speed & Distance", duration: 45 },
+          { name: "Trigonometry & Heights", duration: 50 },
+          { name: "Geometry & Coordinate Lines", duration: 60 }
+        ]
+      },
+      {
+        id: "reasoning",
+        name: "General Intelligence & Reasoning",
+        topics: [
+          { name: "Syllogism & Deductive Logic", duration: 25 },
+          { name: "Coding-Decoding & Analogy", duration: 20 },
+          { name: "Blood Relations & Family Trees", duration: 25 },
+          { name: "Seating Arrangement & Puzzles", duration: 40 },
+          { name: "Non-Verbal & Pattern Folding", duration: 25 }
+        ]
+      },
+      {
+        id: "english",
+        name: "English Comprehension",
+        topics: [
+          { name: "Reading Comprehension Strategy", duration: 30 },
+          { name: "Error Spotting & Subject-Verb Agreement", duration: 25 },
+          { name: "Cloze Test & Context Clues", duration: 20 },
+          { name: "Idioms, Phrases & One Word Substitutions", duration: 30 },
+          { name: "Active / Passive Voice & Direct Speech", duration: 30 }
+        ]
+      },
+      {
+        id: "ga",
+        name: "General Awareness",
+        topics: [
+          { name: "Indian Polity: Constitution & Articles", duration: 40 },
+          { name: "Modern Indian History & Freedom Struggle", duration: 45 },
+          { name: "Physical & Economic Geography", duration: 35 },
+          { name: "General Science: Physics & Biology Core", duration: 35 },
+          { name: "Current Affairs & Government Schemes", duration: 30 }
+        ]
+      }
+    ];
+
+    // 3. Motivational, Stoic & Logical Trading Quotes
+    const quotesCollection = [
+      {
+        category: "Logical Trading",
+        quote: "The goal of a successful trader is to make the best trades. Money is secondary.",
+        author: "Dr. Alexander Elder",
+        context: "From 'Trading for a Living' — emphasizing that disciplined adherence to rules and risk management precedes financial gain."
+      },
+      {
+        category: "Philosophy & Stoicism",
+        quote: "We suffer more often in imagination than in reality.",
+        author: "Seneca",
+        context: "Letters from a Stoic — written to remind thinkers that excessive worry creates false burdens ahead of actual events."
+      },
+      {
+        category: "Consistent Studying",
+        quote: "Success is nothing more than a few simple disciplines, practiced every day.",
+        author: "Jim Rohn",
+        context: "Focuses on compounding effort over intermittent heroic sprints during intense competitive preparation."
+      },
+      {
+        category: "Optimistic Resilience",
+        quote: "The impediment to action advances action. What stands in the way becomes the way.",
+        author: "Marcus Aurelius",
+        context: "Meditations Book 5 — practical philosophy for using setbacks as direct material for character growth."
+      },
+      {
+        category: "Deep Focus",
+        quote: "Clarity about what matters provides clarity about what does not.",
+        author: "Cal Newport",
+        context: "From 'Deep Work' — guiding students and professionals to eliminate distraction to achieve cognitive mastery."
+      },
+      {
+        category: "Mindset & Execution",
+        quote: "You do not rise to the level of your goals. You fall to the level of your systems.",
+        author: "James Clear",
+        context: "From 'Atomic Habits' — emphasizing process architectures over passive wishful thinking."
+      }
+    ];
+
+    // ================= STATE MANAGEMENT =================
+    let newsState = [...baseNews];
+    let poolIndex = 0;
+    let timerState = {
+      intervalId: null,
+      remainingSeconds: 0,
+      topicName: "",
+      subjectName: ""
+    };
+
+    // ================= UI RENDER FUNCTIONS =================
+
+    // Render News Wire
+    function renderNews() {
+      const container = document.getElementById('news-container');
+      container.innerHTML = newsState.map(item => `
+        <article class="bg-slate-900 border border-slate-800 hover:border-slate-700/80 p-4 rounded-xl transition duration-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="font-semibold text-slate-400 uppercase tracking-wider">${item.tag}</span>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                item.sentiment === 'Bullish' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                item.sentiment === 'Bearish' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                'bg-slate-700/40 text-slate-300 border border-slate-600/40'
+              }">${item.sentiment}</span>
+              <span class="text-slate-500">${item.time}</span>
+            </div>
+          </div>
+          <h4 class="text-sm font-semibold text-white leading-snug">${item.title}</h4>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${item.summary}</p>
+          <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Wire: ${item.source}</span>
+            <span class="text-indigo-400 font-medium cursor-pointer hover:underline">Analysis Desk &rarr;</span>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    // Render SSC Syllabus Grid
+    function renderSyllabus() {
+      const container = document.getElementById('syllabus-container');
+      container.innerHTML = sscSyllabus.map(sub => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 class="font-bold text-sm text-indigo-300 flex items-center gap-2">
+              <i data-lucide="folder-check" class="w-4 h-4 text-indigo-400"></i> ${sub.name}
+            </h3>
+            <span class="text-xs text-slate-500">${sub.topics.length} Modules</span>
+          </div>
+          <ul class="space-y-2">
+            ${sub.topics.map(topic => `
+              <li class="flex items-center justify-between bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 p-2.5 rounded-lg text-xs transition">
+                <div>
+                  <div class="font-medium text-slate-200">${topic.name}</div>
+                  <div class="text-[11px] text-slate-400">${topic.duration} Min Target Session</div>
+                </div>
+                <button onclick="startTopicTimer('${topic.name}', '${sub.name}',${topic.duration})" class="px-2.5 py-1.5 bg-indigo-600/80 hover:bg-indigo-600 text-white font-semibold rounded-md transition active:scale-95 flex items-center gap-1">
+                  <i data-lucide="play" class="w-3 h-3"></i> Start
+                </button>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `).join('');
+    }
+
+    // Render Mindset Quotes Grid
+    function renderQuotes() {
+      const grid = document.getElementById('quotes-grid');
+      grid.innerHTML = quotesCollection.map(q => `
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950/60 border border-indigo-800/50 px-2 py-0.5 rounded">
+              ${q.category}
+            </span>
+            <p class="text-sm font-medium text-slate-200 italic leading-relaxed">"${q.quote}"</p>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-indigo-300">— ${q.author}</div>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">${q.context}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ================= TIMER LOGIC =================
+    function startTopicTimer(topicName, subjectName, durationMinutes) {
+      if (timerState.intervalId) {
+        clearInterval(timerState.intervalId);
+      }
+
+      timerState.topicName = topicName;
+      timerState.subjectName = subjectName;
+      timerState.remainingSeconds = durationMinutes * 60;
+
+      document.getElementById('active-topic-name').textContent = topicName;
+      document.getElementById('active-subject-name').textContent = `Subject: ${subjectName}`;
+      document.getElementById('timer-cancel-btn').classList.remove('hidden');
+
+      updateTimerHUD();
+
+      // Scroll smoothly to timer HUD
+      document.getElementById('timer-hud').scrollIntoView({ behavior: 'smooth' });
+
+      timerState.intervalId = setInterval(() => {
+        if (timerState.remainingSeconds > 0) {
+          timerState.remainingSeconds--;
+          updateTimerHUD();
+        } else {
+          clearInterval(timerState.intervalId);
+          timerState.intervalId = null;
+          playCompletionChime();
+          alert(`Target session completed for: ${topicName}`);
+          document.getElementById('timer-cancel-btn').classList.add('hidden');
+        }
+      }, 1000);
+    }
+
+    function stopActiveTimer() {
+      if (timerState.intervalId) {
+        clearInterval(timerState.intervalId);
+        timerState.intervalId = null;
+      }
+      timerState.remainingSeconds = 0;
+      document.getElementById('active-topic-name').textContent = "Timer Stopped";
+      document.getElementById('active-subject-name').textContent = "Session manually ended.";
+      document.getElementById('timer-display').textContent = "00:00";
+      document.getElementById('timer-cancel-btn').classList.add('hidden');
+    }
+
+    function updateTimerHUD() {
+      const minutes = Math.floor(timerState.remainingSeconds / 60);
+      const seconds = timerState.remainingSeconds % 60;
+      document.getElementById('timer-display').textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function playCompletionChime() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.8);
+      } catch (e) {
+        console.log('Audio chime unavailable', e);
+      }
+    }
+
+    // ================= REFRESH BUTTON WITH DYNAMIC INJECTION =================
+    function triggerGlobalRefresh() {
+      const icon = document.getElementById('refresh-icon');
+      const label = document.getElementById('refresh-label');
+      const banner = document.getElementById('status-banner');
+      const statusText = document.getElementById('status-text');
+
+      // Spin animation
+      icon.classList.add('animate-spin-custom');
+      label.textContent = "Updating...";
+
+      setTimeout(() => {
+        // Prepend new news item
+        if (poolIndex < freshNewsPool.length) {
+          newsState.unshift(freshNewsPool[poolIndex]);
+          poolIndex = (poolIndex + 1) % freshNewsPool.length;
+        } else {
+          // If all pool items have been shown, simulate minor price jitter
+          const randomIdx = Math.floor(Math.random() * newsState.length);
+          newsState[randomIdx].time = "1m ago";
+        }
+
+        renderNews();
+        lucide.createIcons();
+
+        // Restore button state
+        icon.classList.remove('animate-spin-custom');
+        label.textContent = "Refresh Data";
+
+        // Display banner
+        banner.classList.remove('hidden');
+        statusText.textContent = "Data synced: Real-time global wire and indices up to date.";
+        setTimeout(() => {
+          banner.classList.add('hidden');
+        }, 3500);
+
+      }, 600);
+    }
+
+    // ================= QUOTE MODAL REMINDER ENGINE =================
+    function triggerQuotePopup(manual = false) {
+      const randomQuote = quotesCollection[Math.floor(Math.random() * quotesCollection.length)];
+      document.getElementById('modal-category').textContent = randomQuote.category;
+      document.getElementById('modal-quote').textContent = `"${randomQuote.quote}"`;
+      document.getElementById('modal-author').textContent = `— ${randomQuote.author}`;
+      document.getElementById('modal-context').textContent = randomQuote.context;
+      document.getElementById('quote-modal').classList.remove('hidden');
+    }
+
+    function closeQuoteModal() {
+      document.getElementById('quote-modal').classList.add('hidden');
+    }
+
+    // Automatic periodic quote reminder (triggers every 8 minutes)
+    setInterval(() => {
+      triggerQuotePopup(false);
+    }, 8 * 60 * 1000);
+
+    // ================= TAB SWITCHING =================
+    function switchTab(tabKey) {
+      const tabs = ['markets', 'ssc', 'quotes'];
+      tabs.forEach(key => {
+        const section = document.getElementById(`section-${key}`);
+        const btn = document.getElementById(`tab-btn-${key}`);
+        if (key === tabKey) {
+          section.classList.remove('hidden');
+          btn.className = "px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all bg-indigo-600 text-white shadow";
+        } else {
+          section.classList.add('hidden');
+          btn.className = "px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-white";
+        }
+      });
+      lucide.createIcons();
+    }
+
+    // ================= INITIALIZATION =================
+    window.addEventListener('DOMContentLoaded', () => {
+      renderNews();
+      renderSyllabus();
+      renderQuotes();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
