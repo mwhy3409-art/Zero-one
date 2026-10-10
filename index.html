@@ -63,22 +63,55 @@ nav button.on{color:var(--red)}
 .switch.on{background:var(--tea)}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
 .switch.on::after{transform:translateX(20px)}
-input[type=time],input[type=number]{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff;width:110px}
+input[type=time],input[type=number],input[type=date]{font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff;width:110px}
 .up{color:var(--tea)}.down{color:var(--red)}
 .pb{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
 .pb b{font-variant-numeric:tabular-nums}
 .ring{position:relative;flex:none}
 .ring>div{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.bg{position:fixed;inset:0;background:rgba(14,42,51,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{background:var(--paper);width:100%;max-width:480px;max-height:90vh;max-height:90dvh;overflow-y:auto;border-radius:22px 22px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 14px}
+.qt{font-family:Georgia,"Times New Roman",serif;font-size:24px;line-height:1.3;font-weight:700;margin:10px 0 16px;letter-spacing:-.2px}
+.qrow{padding:12px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.45}
+.ql{font-weight:700;color:var(--tea);font-size:13.5px;margin-bottom:3px}
+.bg.full{background:var(--paper);align-items:stretch}
+.sheet.full{max-height:none;height:100%;border-radius:0;padding-top:calc(10px + env(safe-area-inset-top));animation:none}
+.srow{display:flex;align-items:center;gap:4px}
+.srow input{flex:1;font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:#fff;min-width:0;width:auto}
+.ans{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;overflow:hidden}
+.ans p{margin:6px 0 12px;font-size:14.5px;line-height:1.5}
+.ans img{float:right;width:84px;height:84px;object-fit:cover;border-radius:10px;margin:0 0 8px 12px}
+input[type=date]{width:150px!important}
+.pbar{height:6px;background:var(--mist);border-radius:3px;overflow:hidden;margin:4px 0 6px}
+.pbar i{display:block;height:100%;background:var(--tea)}
+.subj{border-bottom:1px solid var(--line);padding:4px 0}
+.shead{width:100%;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;text-align:left;padding:10px 0}
+.shead b{font-size:16.5px;line-height:1.25}
+.chev{font-size:24px;color:var(--mut);line-height:1}
+.trow{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.tb{flex:1;min-width:0}.tb b{font-size:15px;font-weight:650;line-height:1.3}
+.chk{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;color:#fff;margin-top:1px}
+.chk.on{background:var(--tea);border-color:var(--tea)}
+.chk svg.i{width:16px;height:16px;stroke-width:3}
+.pbtn{width:42px;height:42px;border-radius:50%;background:var(--mist);display:grid;place-items:center;flex:none;color:var(--tea)}
+.pbtn svg.i{width:18px;height:18px}
+.tring{position:relative;width:240px;height:240px;margin:12px auto 6px}
+.tring>svg{position:absolute;inset:0}
+.tin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px}
+.tpill{padding:6px 10px;color:var(--red);border-color:var(--red);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div id="sheet"></div>
 <script>
 "use strict";
 /* ============ helpers ============ */
 const KEY = "zero-one-v1";
-const DEF = { topics: ["Assam", "Northeast", "Markets", "India", "World"], notify: false, notifyTime: "07:00", goalKm: 3.2, weight: 65, lastNotified: "" };
+const DEF = { topics: ["Assam", "Northeast", "Markets", "India", "World"], notify: false, notifyTime: "07:00", goalKm: 3.2, weight: 65, lastNotified: "", recent: [], lastQuote: "", tmWake: true };
 const TOPICS = ["Assam", "Northeast", "India", "Markets", "Business", "World", "Sports", "Tech"];
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -101,18 +134,24 @@ const IC = {
   play: '<path d="M7 4v16l13-8z" fill="currentColor"/>',
   pause: '<rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/>',
   stop: '<rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  quote: '<path d="M7 7h4v5c0 3-2 5-4 5M15 7h4v5c0 3-2 5-4 5"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  book: '<path d="M5 3h13a1 1 0 0 1 1 1v15H6a2 2 0 0 0-2 2V4a1 1 0 0 1 1-1z"/><path d="M8 7h7M8 11h5"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
   up: '<path d="m4 15 5-5 4 4 7-7"/>', down: '<path d="m4 9 5 5 4-4 7 7"/>',
 };
 const ico = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
 
 /* ============ storage ============ */
 function load() {
-  try { const j = JSON.parse(localStorage.getItem(KEY)) || {}; return { prefs: { ...DEF, ...(j.prefs || {}) }, runs: j.runs || [], cache: j.cache || {} }; }
-  catch (e) { return { prefs: { ...DEF }, runs: [], cache: {} }; }
+  const ST = { done: {}, spent: {}, hours: 4, examDate: "" };
+  try { const j = JSON.parse(localStorage.getItem(KEY)) || {}; return { prefs: { ...DEF, ...(j.prefs || {}) }, runs: j.runs || [], cache: j.cache || {}, study: { ...ST, ...(j.study || {}) }, timer: j.timer || null }; }
+  catch (e) { return { prefs: { ...DEF }, runs: [], cache: {}, study: ST, timer: null }; }
 }
 let D = load();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} };
-let S = { tab: "home", news: "national", runView: "track", mode: "gps", mult: 1, open: null, msg: "", gpsMsg: "" };
+let S = { stab: "syllabus", subj: null, sheet: null, sid: 0, sr: null, toast: "", tab: "home", news: "national", runView: "track", mode: "gps", mult: 1, open: null, msg: "", gpsMsg: "" };
 const L = {}, E = {};
 
 /* ============ data: news ============ */
@@ -238,7 +277,7 @@ function startGps() {
 function stopSensors() { clearInterval(timer); if (watchId != null) navigator.geolocation.clearWatch(watchId); watchId = null; releaseWake(); }
 async function lockScreen() { try { wake = await navigator.wakeLock.request("screen"); } catch (e) {} }
 function releaseWake() { try { wake && wake.release(); } catch (e) {} wake = null; }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && R.status === "running") lockScreen(); checkReminder(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && R.status === "running") lockScreen(); checkReminder(); timerTick(); });
 
 function begin() {
   R = fresh(); R.status = "running"; R.mode = S.mode; R.mult = S.mult; R.t0 = Date.now(); S.gpsMsg = "";
@@ -376,16 +415,328 @@ function feedView() {
   <h2>Install</h2><div class="sub">Open Chrome's menu and choose Install app to add Zero one to your home screen.</div>`;
 }
 
-const TITLES = { home: "Zero one", news: "News", weather: "Weather", run: "Run", feed: "My feed" };
+const TITLES = { home: "Zero one", news: "News", weather: "Weather", study: "SSC prep", run: "Run", feed: "My feed" };
 function render(soft) {
   if (soft && S.tab === "feed") return;
-  if (soft && S.tab === "run") return;
-  const t = S.tab, main = t === "home" ? homeView() : t === "news" ? newsView() : t === "weather" ? weatherView() : t === "run" ? runView() : feedView();
+  if (soft && (S.tab === "run" || S.tab === "study")) return;
+  const t = S.tab, main = t === "home" ? homeView() : t === "news" ? newsView() : t === "weather" ? weatherView() : t === "run" ? runView() : t === "study" ? studyView() : feedView();
   const canRefresh = ["home", "news", "weather"].includes(t), y = window.scrollY;
-  $("#app").innerHTML = `<div class="top"><div class="logo">01</div><div class="brand">${TITLES[t]}</div><div class="grow"></div>${canRefresh ? `<button class="icon-btn" aria-label="Refresh" data-act="refresh">${ico("refresh")}</button>` : ""}</div><div class="main">${main}</div><nav aria-label="Main">${[["home", "home", "Home"], ["news", "news", "News"], ["weather", "cloud", "Weather"], ["run", "run", "Run"], ["feed", "sliders", "My feed"]].map(([k, i, l]) => `<button class="${t === k ? "on" : ""}" data-act="tab" data-v="${k}"${t === k ? ' aria-current="page"' : ""}>${ico(i)}${l}</button>`).join("")}</nav>`;
+  $("#app").innerHTML = `<div class="top"><div class="logo">01</div><div class="brand">${TITLES[t]}</div><div class="grow"></div>${T.running && !(t === "study" && S.stab === "timer") ? `<button class="chip tpill" id="tpill" data-act="gotimer" aria-label="Open timer">${fmtT(T.remaining)}</button>` : ""}<button class="icon-btn" aria-label="Quote of the day" data-act="quote">${ico("quote")}</button><button class="icon-btn" aria-label="Search" data-act="search">${ico("search")}</button>${canRefresh ? `<button class="icon-btn" aria-label="Refresh" data-act="refresh">${ico("refresh")}</button>` : ""}</div><div class="main">${main}</div><nav aria-label="Main">${[["home", "home", "Home"], ["news", "news", "News"], ["weather", "cloud", "Weather"], ["study", "book", "SSC"], ["run", "run", "Run"], ["feed", "sliders", "My feed"]].map(([k, i, l]) => `<button class="${t === k ? "on" : ""}" data-act="tab" data-v="${k}"${t === k ? ' aria-current="page"' : ""}>${ico(i)}${l}</button>`).join("")}</nav>`;
   if (soft) window.scrollTo(0, y);
 }
 function updateLive() { const el = $("#live"); if (el && S.tab === "run" && S.runView === "track") el.innerHTML = runTrack(); }
+
+/* ============ quote of the day ============ */
+const QUOTES = [
+  { q: "The only way to do great work is to love what you do.", who: "Steve Jobs", role: "Co-founder of Apple", when: "Stanford University commencement speech, 12 June 2005", why: "Jobs had been fired from the company he started, yet he kept going because he loved the work. He told graduates that work fills a large part of life, so it is worth looking until you find work you love." },
+  { q: "The only thing we have to fear is fear itself.", who: "Franklin D. Roosevelt", role: "32nd President of the United States", when: "First inaugural address, 4 March 1933", why: "The US was deep in the Great Depression and banks were failing. He argued that panic was making the crisis worse, and asked people to trust that recovery was possible." },
+  { q: "Injustice anywhere is a threat to justice everywhere.", who: "Martin Luther King Jr.", role: "Civil rights leader", when: "Letter from Birmingham Jail, April 1963", why: "He wrote it in a jail cell, replying to clergymen who said he should wait and that outsiders shouldn't interfere. His answer was that communities are tied together, so no one can ignore wrongs happening elsewhere." },
+  { q: "Imagination is more important than knowledge.", who: "Albert Einstein", role: "Physicist", when: "Interview in The Saturday Evening Post, 26 October 1929", why: "He explained that knowledge is limited to what we already know, while imagination reaches everything that might be. For him, new ideas in science began with picturing something no one had yet proven." },
+  { q: "Education is the most powerful weapon which you can use to change the world.", who: "Nelson Mandela", role: "Anti-apartheid leader and South Africa's first Black president", when: "Launch of the Mindset Network, Johannesburg, 16 July 2003", why: "After 27 years in prison, he saw schooling as the surest way for children from poor and disadvantaged homes to change their own lives and their country." },
+  { q: "That's one small step for man, one giant leap for mankind.", who: "Neil Armstrong", role: "Commander of Apollo 11", when: "On the Moon, 20 July 1969", why: "He spoke as the first person to step onto the lunar surface. The line sets one man's single step against what the achievement meant for all humanity. He later said he meant to say \"for a man\".", s: "Neil Armstrong" },
+  { q: "At the stroke of the midnight hour, when the world sleeps, India will awake to life and freedom.", who: "Jawaharlal Nehru", role: "India's first Prime Minister", when: "Constituent Assembly, Delhi, midnight of 14 to 15 August 1947", why: "Known as the Tryst with Destiny speech, it marked India's independence from British rule. He used the image of midnight to show a country waking after long colonial rule.", s: "Tryst with Destiny speech" },
+  { q: "A journey of a thousand miles begins with a single step.", who: "Laozi", role: "Chinese philosopher, traditionally credited with the Tao Te Ching", when: "Tao Te Ching, around the 6th century BCE (traditional dating)", why: "He taught that great undertakings grow out of small, simple beginnings, so the hardest part is often just starting.", note: "Translations vary slightly." },
+  { q: "The best way to predict the future is to invent it.", who: "Alan Kay", role: "Computer scientist", when: "Said around 1971 at Xerox PARC", why: "He was telling colleagues who were designing early personal computers that waiting to see what happens is weaker than building the future yourself. His team helped shape personal computing." },
+  { q: "I've failed over and over and over again in my life. And that is why I succeed.", who: "Michael Jordan", role: "Basketball player", when: "Nike advertisement, 1997", why: "In the ad he listed thousands of missed shots and lost games. His point was that failure is part of the path to success, not the opposite of it." },
+  { q: "The miracle isn't that I finished. The miracle is that I had the courage to start.", who: "John Bingham", role: "Runner and columnist, known as The Penguin", when: "His Runner's World columns and books on running for beginners", why: "He began running as a slower, out-of-shape adult and wrote for people who feel they are too slow. His message: finishing matters less than finding the courage to begin." },
+  { q: "Ask not what your country can do for you, ask what you can do for your country.", who: "John F. Kennedy", role: "35th President of the United States", when: "Inaugural address, 20 January 1961", why: "In the middle of the Cold War he called on citizens to serve, rather than wait for the government to provide." },
+  { q: "Never give in, never, never, never.", who: "Winston Churchill", role: "British Prime Minister", when: "Speech at Harrow School, 29 October 1941", why: "Britain was at war and under heavy attack. Speaking to schoolboys, he said the lesson of the war was never to yield, except to convictions of honour and good sense.", note: "Shortened from the full line.", s: "Winston Churchill" },
+  { q: "My uncle is not greater than my country.", who: "Lachit Borphukan", role: "Ahom general", when: "Before the Battle of Saraighat, Guwahati, 1671 (as told in Assamese tradition)", why: "He had ordered his uncle to finish a defensive embankment overnight. When it was left incomplete, he punished him, saying duty to the land came before family. The story inspired his troops, and the Ahoms went on to defeat a much larger Mughal force on the Brahmaputra.", note: "Passed down through Assamese tradition and chronicles; the wording varies by telling." },
+  { q: "You have the right to work, but never to the fruit of work.", who: "Bhagavad Gita", role: "Hindu scripture, Chapter 2, verse 47", when: "Krishna's advice to Arjuna on the battlefield of Kurukshetra", why: "Arjuna hesitated before battle. Krishna told him to give full effort to his duty without being tied to the result, so that fear of failure does not stop action.", note: "A common English rendering; translations vary.", s: "Bhagavad Gita" },
+  { q: "Arise, awake, and stop not till the goal is reached.", who: "Swami Vivekananda", role: "Monk and philosopher", when: "Popularly attributed to his talks to young Indians in the 1890s", why: "He was adapting a call from the Katha Upanishad urging people to wake from inertia. He told the youth that strength and persistence would build the nation.", note: "Adapted from the Katha Upanishad; the exact first source is debated." },
+  { q: "Dream, dream, dream. Dreams transform into thoughts, and thoughts result in action.", who: "A. P. J. Abdul Kalam", role: "Scientist and 11th President of India", when: "His addresses to students and young people", why: "He believed young people should aim high, since a dream becomes a plan and a plan becomes work. He often spoke to students in this spirit.", note: "Quoted from his speeches; exact wording varies by source." },
+  { q: "Pain is inevitable. Suffering is optional.", who: "Haruki Murakami", role: "Novelist and marathon runner", when: "What I Talk About When I Talk About Running, 2007", why: "Writing about long-distance running, he describes a saying runners know: hurting during a hard run cannot be avoided, but how much you suffer depends on how you respond." },
+  { q: "No human is limited.", who: "Eliud Kipchoge", role: "Kenyan marathon runner", when: "INEOS 1:59 Challenge, Vienna, 12 October 2019", why: "He ran a marathon in 1:59:40, the first time anyone had gone under two hours, though it was not an official record because of the pacing setup. It is his motto for believing in what people can do." },
+  { q: "If you want to run, run a mile. If you want to experience a different life, run a marathon.", who: "Emil Zatopek", role: "Czechoslovak long-distance runner", when: "Attributed to him; he won the 5,000 m, 10,000 m and marathon at the 1952 Helsinki Olympics", why: "He felt the marathon changes a person in a way shorter races do not. The line is often used to describe the commitment a marathon demands.", note: "Widely attributed; the original source is unclear." },
+  { q: "Well done is better than well said.", who: "Benjamin Franklin", role: "Statesman and writer", when: "Poor Richard's Almanack, 1737", why: "A short proverb saying that actions count for more than speeches or promises." },
+  { q: "Great things are done by a series of small things brought together.", who: "Vincent van Gogh", role: "Painter", when: "Letter to his brother Theo, 1882", why: "He was writing about the steady daily work behind his drawings and paintings, and how large results come from many small efforts.", note: "Translated from Dutch; wording varies." },
+  { q: "We must believe that we are gifted for something, and that this thing, at whatever cost, must be attained.", who: "Marie Curie", role: "Physicist and chemist, Nobel Prize winner in Physics and in Chemistry", when: "As recalled by her daughter Eve Curie in the biography Madame Curie, 1937", why: "Curie worked for years in poor conditions to isolate radium. She said that belief in your own purpose is what lets you push through hardship." },
+  { q: "Government of the people, by the people, for the people, shall not perish from the earth.", who: "Abraham Lincoln", role: "16th President of the United States", when: "Gettysburg Address, 19 November 1863", why: "He spoke at the dedication of a cemetery for soldiers killed in the Civil War. He said their sacrifice should renew the country's commitment to a government that belongs to its citizens." },
+  { q: "Do or die.", who: "Mahatma Gandhi", role: "Leader of India's independence movement", when: "Quit India speech, Gowalia Tank, Bombay, 8 August 1942", why: "He gave it as a mantra at the start of the Quit India Movement, asking Indians to either win freedom or give everything trying." },
+  { q: "Educate, agitate, organise.", who: "Dr. B. R. Ambedkar", role: "Jurist, social reformer and chief architect of India's Constitution", when: "A slogan associated with his movement for the rights of oppressed communities", why: "He argued that learning must come first, then peaceful protest, then unity and organisation to win rights and dignity.", note: "Often quoted as \"Educate, Agitate, Organise\"." },
+  { q: "Where the mind is without fear and the head is held high.", who: "Rabindranath Tagore", role: "Poet and Nobel Prize winner in Literature", when: "Poem in Gitanjali, 1910 (English version published 1912)", why: "Writing under British rule, he imagined a country free from fear, narrow habits and closed thinking, where knowledge is open to all. It reads like a prayer for the nation to awaken." },
+];
+const todayKey = () => new Date().toDateString();
+function quoteOfDay() {
+  const n = new Date(), d = Math.floor((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - new Date(2026, 0, 1)) / 864e5);
+  return QUOTES[((d % QUOTES.length) + QUOTES.length) % QUOTES.length];
+}
+function quoteSheet() {
+  const q = quoteOfDay(), n = new Date();
+  return `<div class="bg" data-act="bg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Quote of the day"><div class="grab"></div>
+  <div class="sub">Quote of the day, ${n.toLocaleDateString("en-IN", { day: "numeric", month: "long" })}</div>
+  <blockquote class="qt">\u201C${esc(q.q)}\u201D</blockquote>
+  <div class="qrow"><div class="ql">Who said it</div><b>${esc(q.who)}</b><div class="sub">${esc(q.role)}</div></div>
+  <div class="qrow"><div class="ql">When and where</div>${esc(q.when)}</div>
+  <div class="qrow"><div class="ql">The reason behind it</div>${esc(q.why)}</div>
+  ${q.note ? `<div class="meta">${esc(q.note)}</div>` : ""}
+  ${S.toast ? `<div class="note">${esc(S.toast)}</div>` : ""}
+  <div class="row" style="margin-top:16px"><button class="btn ghost" style="flex:1" data-act="shareq">Share</button><button class="btn" style="flex:1" data-act="learn">Learn more</button></div>
+  <button class="chip" style="margin:12px auto 0;display:block" data-act="closesheet">Close</button></div></div>`;
+}
+async function shareQuote() {
+  const q = quoteOfDay(), t = `\u201C${q.q}\u201D \u2014 ${q.who}`;
+  try { if (navigator.share) { await navigator.share({ title: "Zero one", text: t }); return; } await navigator.clipboard.writeText(t); S.toast = "Quote copied."; }
+  catch (e) { return; }
+  renderSheet();
+}
+
+/* ============ search ============ */
+async function fetchWiki(q) {
+  const s = await (await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=1&format=json&origin=*`)).json();
+  const t = s.query.search[0] && s.query.search[0].title; if (!t) return null;
+  const r = await (await fetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(t.replace(/ /g, "_")))).json();
+  if (!r.extract) return null;
+  return { title: r.title, text: r.extract.length > 500 ? r.extract.slice(0, 500).replace(/\s+\S*$/, "") + "\u2026" : r.extract, url: (r.content_urls && (r.content_urls.mobile || r.content_urls.desktop) || {}).page || "", img: (r.thumbnail && r.thumbnail.source) || "" };
+}
+function runSearch(q) {
+  q = (q || "").trim(); if (!q) return;
+  const id = ++S.sid; S.sr = { q };
+  D.prefs.recent = [q, ...(D.prefs.recent || []).filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 6); save();
+  updateRes();
+  const ok = () => S.sid === id && S.sr;
+  fetchWiki(q).then(w => { if (ok()) { S.sr.wiki = w; updateRes(); } }).catch(() => { if (ok()) { S.sr.wiki = null; updateRes(); } });
+  fetchRss(gs(q)).then(n => { if (ok()) { S.sr.news = n; updateRes(); } }).catch(() => { if (ok()) { S.sr.news = []; S.sr.newsErr = true; updateRes(); } });
+}
+function searchResults() {
+  const s = S.sr, rec = D.prefs.recent || [];
+  if (!s || (s.wiki === undefined && s.news === undefined && !s.q)) {
+    return rec.length ? `<h2>Recent searches</h2><div style="display:flex;flex-wrap:wrap;gap:8px">${rec.map(r => `<button class="chip" data-act="recent" data-v="${esc(r)}">${esc(r)}</button>`).join("")}</div>`
+      : `<div class="note">Search any topic. You get a quick answer from Wikipedia, the latest news stories, and a link to search the whole web.</div>`;
+  }
+  let h = "";
+  if (s.wiki) h += `<h2>Quick answer</h2><div class="ans">${s.wiki.img ? `<img src="${esc(s.wiki.img)}" alt="">` : ""}<b>${esc(s.wiki.title)}</b><p>${esc(s.wiki.text)}</p>${s.wiki.url ? `<a class="chip" href="${esc(s.wiki.url)}" target="_blank" rel="noopener">Read more on Wikipedia</a>` : ""}</div>`;
+  else if (s.wiki === undefined) h += `<h2>Quick answer</h2>${skel().split("</div>").slice(0, 3).join("</div>")}</div>`;
+  h += `<h2>In the news</h2>`;
+  if (s.news === undefined) h += skel();
+  else if (s.news.length) h += s.news.map(i => item(i, false)).join("");
+  else h += s.newsErr ? `<div class="err">Couldn't load news right now. Check your connection.</div>` : `<div class="sub">No recent stories found.</div>`;
+  h += `<a class="btn ghost block" style="margin-top:18px" href="https://www.google.com/search?q=${encodeURIComponent(s.q)}" target="_blank" rel="noopener">Search the whole web</a>`;
+  return h;
+}
+function searchSheet() {
+  return `<div class="bg full"><div class="sheet full" role="dialog" aria-modal="true" aria-label="Search">
+  <div class="srow"><input id="q" type="search" placeholder="Search news, people, places, anything" value="${esc((S.sr && S.sr.q) || "")}" autocomplete="off" enterkeyhint="search" aria-label="Search"><button class="icon-btn" aria-label="Search" data-act="dosearch">${ico("search")}</button><button class="icon-btn" aria-label="Close" data-act="closesheet">${ico("close")}</button></div>
+  <div id="sres">${searchResults()}</div></div></div>`;
+}
+function updateRes() { const el = $("#sres"); if (el && S.sheet === "search") el.innerHTML = searchResults(); }
+
+/* ============ sheets ============ */
+function renderSheet() {
+  $("#sheet").innerHTML = S.sheet === "search" ? searchSheet() : S.sheet === "quote" ? quoteSheet() : "";
+  document.body.style.overflow = S.sheet ? "hidden" : "";
+}
+function openSheet(name) {
+  S.sheet = name; S.toast = "";
+  if (name === "search") S.sr = null;
+  try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+  renderSheet();
+  if (name === "search") setTimeout(() => { const i = $("#q"); i && i.focus(); }, 60);
+}
+function closeSheet() {
+  if (!S.sheet) return;
+  if (history.state && history.state.sheet) history.back();
+  else { S.sheet = null; renderSheet(); }
+}
+window.addEventListener("popstate", () => { if (S.sheet) { S.sheet = null; renderSheet(); } });
+function maybeShowQuote() {
+  setTimeout(() => { if (D.prefs.lastQuote !== todayKey() && !S.sheet) { D.prefs.lastQuote = todayKey(); save(); openSheet("quote"); } }, 900);
+}
+
+/* ============ SSC prep: syllabus ============ */
+const SUBJECTS = [
+  { id: "q", name: "Quantitative Aptitude", info: "25 questions, 50 marks. Aim for about 22 min in the exam.", topics: [
+    ["q1", "Number System", "divisibility, factors, remainders, HCF and LCM", 240],
+    ["q2", "Simplification and Approximation", "BODMAS, surds and indices, square and cube roots", 150],
+    ["q3", "Percentage", "conversions, successive change, population and expenses", 180],
+    ["q4", "Ratio, Proportion and Partnership", "ratios, variation, sharing, partnership", 150],
+    ["q5", "Average and Ages", "average, weighted average, problems on ages", 150],
+    ["q6", "Profit, Loss and Discount", "cost and selling price, marked price, successive discount", 180],
+    ["q7", "Simple and Compound Interest", "rates, instalments, difference between SI and CI", 150],
+    ["q8", "Time and Work", "efficiency, pipes and cisterns, wages", 180],
+    ["q9", "Time, Speed and Distance", "trains, boats and streams, relative speed, races", 210],
+    ["q10", "Mixture and Alligation", "mixing two or more quantities, replacement", 90],
+    ["q11", "Algebra", "identities, linear and quadratic equations, inequalities", 210],
+    ["q12", "Geometry", "lines and angles, triangles, circles, triangle centres", 300],
+    ["q13", "Mensuration", "area, volume and surface area of 2D and 3D shapes", 240],
+    ["q14", "Trigonometry", "ratios, identities, heights and distances", 270],
+    ["q15", "Data Interpretation", "tables, bar, line and pie charts", 180],
+    ["q16", "Statistics", "mean, median, mode, range, standard deviation", 90] ] },
+  { id: "r", name: "General Intelligence and Reasoning", info: "25 questions, 50 marks. Aim for about 14 min in the exam.", topics: [
+    ["r1", "Analogy", "number, letter and word analogies", 90],
+    ["r2", "Classification (Odd One Out)", "number, letter and word groups", 60],
+    ["r3", "Series", "number, letter and mixed series", 120],
+    ["r4", "Coding and Decoding", "letter, number and symbol coding", 120],
+    ["r5", "Blood Relations", "family trees, coded relations", 90],
+    ["r6", "Direction and Distance", "turns, shortest distance, shadows", 90],
+    ["r7", "Order, Ranking and Arrangement", "rank from left and right, comparison", 90],
+    ["r8", "Syllogism", "statements and conclusions, Venn method", 120],
+    ["r9", "Venn Diagrams", "relationship diagrams, counting", 60],
+    ["r10", "Mathematical Operations", "symbol substitution, solving equations", 90],
+    ["r11", "Missing Number and Matrix", "grids, rows and columns, figures", 90],
+    ["r12", "Calendar and Clock", "day finding, angles, mirror time", 120],
+    ["r13", "Seating Arrangement and Puzzles", "linear, circular and box-based", 150],
+    ["r14", "Statement and Conclusion", "assumptions, arguments, course of action", 90],
+    ["r15", "Mirror and Water Images", "non-verbal reasoning", 60],
+    ["r16", "Paper Folding and Cutting", "non-verbal reasoning", 60],
+    ["r17", "Embedded and Counting Figures", "hidden figures, triangles and squares", 90],
+    ["r18", "Cubes and Dice", "painted cubes, dice positions", 90],
+    ["r19", "Figure Series and Completion", "pattern completion, figure matrix", 60],
+    ["r20", "Word Formation and Dictionary Order", "alphabet tests, letter positions", 60] ] },
+  { id: "e", name: "English Language and Comprehension", info: "25 questions, 50 marks. Aim for about 14 min in the exam.", topics: [
+    ["e1", "Reading Comprehension", "passages, main idea, inference, vocabulary in context", 180],
+    ["e2", "Cloze Test", "passage with blanks, context clues", 120],
+    ["e3", "Spot the Error", "grammar errors in sentences", 180],
+    ["e4", "Sentence Improvement", "choose the best replacement", 120],
+    ["e5", "Fill in the Blanks", "words, prepositions, collocations", 90],
+    ["e6", "Synonyms and Antonyms", "word meanings and opposites", 120],
+    ["e7", "Idioms and Phrases", "meaning and use", 120],
+    ["e8", "One Word Substitution", "single word for a phrase", 90],
+    ["e9", "Spelling and Confused Words", "commonly misspelt and confused words", 60],
+    ["e10", "Active and Passive Voice", "all tenses, modals", 90],
+    ["e11", "Direct and Indirect Speech", "reporting verbs, tense changes", 90],
+    ["e12", "Para Jumbles and Sentence Rearrangement", "ordering sentences", 90],
+    ["e13", "Tenses and Subject-Verb Agreement", "forms, rules, exceptions", 180],
+    ["e14", "Articles, Prepositions and Conjunctions", "usage rules", 120],
+    ["e15", "Nouns, Pronouns, Adjectives and Adverbs", "parts of speech, degrees of comparison", 120] ] },
+  { id: "g", name: "General Awareness", info: "25 questions, 50 marks. Aim for about 10 min in the exam.", topics: [
+    ["g1", "Ancient India", "Indus Valley, Vedic age, Mauryas, Guptas", 150],
+    ["g2", "Medieval India", "Delhi Sultanate, Mughals, Bhakti and Sufi, Ahom kingdom", 150],
+    ["g3", "Modern India and Freedom Struggle", "1857, Congress, Gandhian movements, independence", 240],
+    ["g4", "Indian Geography", "rivers, climate, soils, resources, states and capitals", 210],
+    ["g5", "World Geography", "continents, oceans, major features", 120],
+    ["g6", "Indian Polity", "Constitution, rights and duties, Parliament, judiciary", 240],
+    ["g7", "Indian Economy", "basic concepts, budget, banking, taxes, schemes", 180],
+    ["g8", "Physics", "motion, force, light, sound, electricity", 150],
+    ["g9", "Chemistry", "matter, acids and bases, metals, everyday chemistry", 150],
+    ["g10", "Biology and Human Body", "cells, systems, diseases, nutrition, plants", 180],
+    ["g11", "Environment and Ecology", "ecosystems, pollution, biodiversity, climate change", 90],
+    ["g12", "Art, Culture and Heritage", "dances, festivals, monuments, literature", 90],
+    ["g13", "Static GK", "books, awards, important days, sports, organisations", 180],
+    ["g14", "Current Affairs", "last 6 to 12 months of national and world events", 240] ] },
+  { id: "c", name: "Computer Knowledge (Tier 2)", info: "A qualifying module in Tier 2, not part of Tier 1.", topics: [
+    ["c1", "Computer Basics and Hardware", "parts of a computer, memory, input and output devices", 90],
+    ["c2", "Operating Systems and MS Office", "Windows, Word, Excel, PowerPoint, shortcuts", 120],
+    ["c3", "Internet, Email and Networking", "browsers, protocols, email, network types", 90],
+    ["c4", "Cyber Security and Common Terms", "viruses, firewalls, cyber crime, abbreviations", 60] ] },
+].map(s => ({ ...s, topics: s.topics.map(([id, name, sub, min]) => ({ id, name, sub, min })) }));
+const ALLT = SUBJECTS.flatMap(s => s.topics);
+const tById = id => ALLT.find(t => t.id === id);
+const fmtMin = m => { m = Math.round(m); return m < 60 ? `${m} min` : m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`; };
+const fmtT = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h}:${pad(m)}:${pad(x)}` : `${pad(m)}:${pad(x)}`; };
+const topicDoneMin = t => (D.study.done[t.id] ? t.min : Math.min(t.min, (D.study.spent[t.id] || 0) / 60));
+function subjStats(s) {
+  return { planned: s.topics.reduce((a, t) => a + t.min, 0), done: s.topics.reduce((a, t) => a + topicDoneMin(t), 0), cnt: s.topics.filter(t => D.study.done[t.id]).length };
+}
+function topicRow(t) {
+  const dn = D.study.done[t.id], sp = Math.round((D.study.spent[t.id] || 0) / 60);
+  return `<div class="trow"><button class="chk${dn ? " on" : ""}" role="checkbox" aria-checked="${!!dn}" aria-label="Mark ${esc(t.name)} done" data-act="done" data-v="${t.id}">${dn ? ico("check") : ""}</button>
+  <div class="tb"><b>${esc(t.name)}</b><div class="meta" style="margin-top:2px">${esc(t.sub)}</div><div class="meta">Plan: ${fmtMin(t.min)}${sp ? `, studied ${fmtMin(sp)}` : ""}</div></div>
+  <button class="pbtn" aria-label="Start timer for ${esc(t.name)}" data-act="tstart" data-v="${t.id}">${ico("play")}</button></div>`;
+}
+function syllabusView() {
+  return `<div class="sub" style="margin-top:6px">SSC CGL Tier 1, the first computer-based stage</div>
+  <div class="stats"><div class="stat"><div class="v">100</div><div class="l">Questions in 4 sections</div></div><div class="stat"><div class="v">200</div><div class="l">Marks, 2 per question</div></div><div class="stat"><div class="v">60 min</div><div class="l">Total time</div></div><div class="stat"><div class="v">-0.5</div><div class="l">For each wrong answer</div></div></div>
+  <div class="note">Study times are suggestions for one full learning pass with practice. Tap the play button on a topic to start a timer for it, and tick the circle when you finish. Tier 2 asks harder questions on the same topics. Check ssc.gov.in for the latest notice, as patterns can change.</div>
+  ${SUBJECTS.map(s => {
+    const st = subjStats(s), open = S.subj === s.id;
+    return `<div class="subj"><button class="shead" data-act="subj" data-v="${s.id}" aria-expanded="${open}"><div><b>${esc(s.name)}</b><div class="meta">${esc(s.info)}</div><div class="meta">${st.cnt} of ${s.topics.length} topics done, ${fmtMin(st.done)} of ${fmtMin(st.planned)}</div></div><span class="chev">${open ? "\u2212" : "+"}</span></button><div class="pbar"><i style="width:${(st.done / st.planned * 100).toFixed(1)}%"></i></div>${open ? s.topics.map(topicRow).join("") : ""}</div>`;
+  }).join("")}`;
+}
+
+/* ============ timer ============ */
+let T = D.timer || (D.timer = { label: "Timer", topicId: null, total: 1500, remaining: 1500, running: false, endAt: 0, counted: 0, done: false });
+let tInt = null, twake = null, AC = null;
+function bank() {
+  const el = T.total - T.remaining, add = el - T.counted;
+  if (add > 0) { if (T.topicId) D.study.spent[T.topicId] = (D.study.spent[T.topicId] || 0) + add; T.counted = el; }
+}
+async function lockTm() { if (D.prefs.tmWake === false) return; try { twake = await navigator.wakeLock.request("screen"); } catch (e) {} }
+function releaseTm() { try { twake && twake.release(); } catch (e) {} twake = null; }
+function beep() {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume();
+    [0, 0.5, 1].forEach(t => { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = 880; g.gain.value = 0.25; o.connect(g); g.connect(AC.destination); o.start(AC.currentTime + t); o.stop(AC.currentTime + t + 0.3); }); } catch (e) {}
+}
+function haltTimer() {
+  if (!T.running) return;
+  T.remaining = Math.max(0, Math.ceil((T.endAt - Date.now()) / 1000));
+  T.running = false; clearInterval(tInt); bank(); releaseTm();
+}
+function timerDone() {
+  T.running = false; T.remaining = 0; T.done = true; clearInterval(tInt); bank(); releaseTm(); save();
+  try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 600]); } catch (e) {}
+  beep(); showNote("Time is up: " + T.label); render();
+}
+function timerTick() {
+  if (!T.running) return;
+  T.remaining = Math.max(0, Math.ceil((T.endAt - Date.now()) / 1000));
+  if (T.remaining <= 0) { timerDone(); return; }
+  const el = $("#tm"); if (el && S.tab === "study" && S.stab === "timer") el.innerHTML = timerBody();
+  const p = $("#tpill"); if (p) p.textContent = fmtT(T.remaining);
+  if (T.remaining % 15 === 0) { bank(); save(); }
+}
+function startTimer() {
+  if (T.done || T.remaining <= 0) { T.remaining = T.total; T.counted = 0; T.done = false; }
+  T.running = true; T.endAt = Date.now() + T.remaining * 1000;
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch (e) {}
+  clearInterval(tInt); tInt = setInterval(timerTick, 1000); lockTm(); save(); render();
+}
+function pauseTimer() { haltTimer(); save(); render(); }
+function resetTimer() { haltTimer(); bank(); T.remaining = T.total; T.counted = 0; T.done = false; save(); render(); }
+function setTimer(min, label, topicId) {
+  haltTimer(); bank();
+  T.total = Math.round(min * 60); T.remaining = T.total; T.counted = 0; T.label = label || "Timer"; T.topicId = topicId || null; T.done = false; T.running = false;
+  save(); render();
+}
+function startTopic(id) {
+  const t = tById(id); if (!t) return;
+  haltTimer(); bank();
+  const left = Math.max(5, t.min - Math.round((D.study.spent[id] || 0) / 60));
+  T.total = left * 60; T.remaining = T.total; T.counted = 0; T.label = t.name; T.topicId = id; T.done = false;
+  S.tab = "study"; S.stab = "timer"; window.scrollTo(0, 0); startTimer();
+}
+function initTimer() {
+  if (!T.running) return;
+  T.remaining = Math.ceil((T.endAt - Date.now()) / 1000);
+  if (T.remaining <= 0) { T.remaining = 0; T.running = false; T.done = true; bank(); save(); }
+  else { tInt = setInterval(timerTick, 1000); lockTm(); }
+}
+function timerBody() {
+  const size = 240, r = 108, c = 2 * Math.PI * r, frac = T.total ? T.remaining / T.total : 0;
+  return `<div class="tring"><svg width="${size}" height="${size}" style="transform:rotate(-90deg)"><circle cx="120" cy="120" r="${r}" fill="none" stroke="#E3ECEA" stroke-width="10"/><circle cx="120" cy="120" r="${r}" fill="none" stroke="${T.done ? "#C62828" : "#2F6B4F"}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - frac)}"/></svg>
+  <div class="tin"><div class="sub">${esc(T.label)}</div><div class="big" style="font-size:50px;margin:6px 0">${fmtT(T.remaining)}</div>${T.done ? `<div style="color:var(--red);font-weight:700">Time is up</div>` : `<div class="sub">${T.running ? "Counting down" : T.remaining < T.total ? "Paused" : "Ready"}</div>`}</div></div>`;
+}
+function timerView() {
+  const presets = [5, 10, 15, 25, 45, 60, 90], wake = D.prefs.tmWake !== false;
+  return `<div id="tm">${timerBody()}</div>
+  <div class="row" style="margin:6px 0 4px">${T.running ? `<button class="btn ghost" style="flex:1" data-act="tgo">${ico("pause")} Pause</button>` : `<button class="btn" style="flex:1" data-act="tgo">${ico("play")} ${T.done || T.remaining <= 0 ? "Start again" : T.remaining < T.total ? "Resume" : "Start"}</button>`}<button class="btn ghost" data-act="treset">Reset</button></div>
+  ${T.topicId ? `<div class="note">Studying <b>${esc(T.label)}</b>. ${D.study.done[T.topicId] ? "Marked done." : `<button class="chip" style="margin-top:8px" data-act="tdone">Mark topic done</button>`}</div>` : ""}
+  <h2>Set the time</h2>${chips(presets.map(m => [m, m + " min"]), T.topicId ? "" : Math.round(T.total / 60), "tset")}
+  <div class="meta">A good rhythm for long topics: 25 minutes of focus, then a 5 minute break.</div>
+  <div class="field"><span>Custom minutes</span><div class="row" style="align-items:center"><input id="cm" type="number" min="1" max="600" placeholder="e.g. 40" style="width:90px"><button class="chip" data-act="tcustom">Set</button></div></div>
+  <div class="field"><div><b>Keep screen on</b><div class="sub">While the timer runs</div></div><button class="switch${wake ? " on" : ""}" role="switch" aria-checked="${wake}" aria-label="Keep screen on" data-act="twake"></button></div>
+  <div class="meta">When time is up you get a sound and vibration, plus a notification if reminders are enabled in My feed. Keep Zero one open so the alert fires on time.</div>`;
+}
+function progressView() {
+  const planned = ALLT.reduce((a, t) => a + t.min, 0), done = ALLT.reduce((a, t) => a + topicDoneMin(t), 0), rem = planned - done;
+  const cnt = ALLT.filter(t => D.study.done[t.id]).length, pct = planned ? done / planned * 100 : 0, hrs = D.study.hours || 4;
+  let exam = "";
+  if (D.study.examDate) {
+    const dl = Math.ceil((new Date(D.study.examDate + "T00:00:00") - new Date(new Date().toDateString())) / 864e5);
+    exam = dl < 0 ? "That exam date has passed." : dl === 0 ? "Your exam is today." : `${dl} days to your exam. To finish the syllabus by then, plan about ${(rem / 60 / dl).toFixed(1)} h of study a day.`;
+  }
+  return `<div class="row" style="align-items:center;margin:12px 0">${ring(pct / 100, 110, `<div><div style="font-weight:700;font-size:22px">${Math.round(pct)}%</div><div class="sub" style="font-size:11px">complete</div></div>`)}<div><div style="font-weight:700;font-size:17px">${cnt} of ${ALLT.length} topics done</div><div class="sub">${fmtMin(done)} of ${fmtMin(planned)} planned study time</div></div></div>
+  ${SUBJECTS.map(s => { const st = subjStats(s); return `<div style="margin:12px 0"><div style="display:flex;justify-content:space-between"><b>${esc(s.name)}</b><span class="sub">${Math.round(st.done / st.planned * 100)}%</span></div><div class="pbar"><i style="width:${(st.done / st.planned * 100).toFixed(1)}%"></i></div></div>`; }).join("")}
+  <h2>Your plan</h2>
+  <div class="field"><span>Study hours per day</span><input type="number" min="0.5" step="0.5" value="${hrs}" data-sp="hours"></div>
+  <div class="field"><span>Exam date</span><input type="date" value="${esc(D.study.examDate || "")}" data-sp="examDate"></div>
+  <div class="note">${rem > 0 ? `At ${hrs} h a day, you need about ${Math.ceil(rem / 60 / hrs)} more days to cover the remaining ${fmtMin(rem)}.` : "You have covered the whole syllabus. Keep revising with mock tests."}${exam ? `<br><br>${esc(exam)}` : ""}</div>
+  <button class="chip" style="margin-top:6px" data-act="resetstudy">Reset study progress</button>`;
+}
+function studyView() {
+  const h = `<h1>SSC prep</h1>` + chips([["syllabus", "Syllabus"], ["timer", "Timer"], ["progress", "Progress"]], S.stab, "stab");
+  return h + (S.stab === "timer" ? timerView() : S.stab === "progress" ? progressView() : syllabusView());
+}
 
 /* ============ notifications ============ */
 async function showNote(body) {
@@ -411,6 +762,25 @@ const ACT = {
   mode: v => { S.mode = v; render(); },
   mult: v => { S.mult = +v; render(); },
   refresh: () => refreshCurrent(true),
+  stab: v => { S.stab = v; render(); },
+  subj: v => { S.subj = S.subj === v ? null : v; render(); },
+  done: v => { if (D.study.done[v]) delete D.study.done[v]; else D.study.done[v] = true; save(); render(); },
+  tstart: startTopic,
+  tgo: () => (T.running ? pauseTimer() : startTimer()),
+  treset: resetTimer,
+  tset: v => setTimer(+v, "Timer", null),
+  tcustom: () => { const m = parseFloat(($("#cm") || {}).value); if (m > 0 && m <= 600) setTimer(m, "Timer", null); },
+  tdone: () => { if (T.topicId) { D.study.done[T.topicId] = true; save(); render(); } },
+  twake: () => { D.prefs.tmWake = !(D.prefs.tmWake !== false); save(); if (!D.prefs.tmWake) releaseTm(); else if (T.running) lockTm(); render(); },
+  gotimer: () => { S.tab = "study"; S.stab = "timer"; render(); window.scrollTo(0, 0); },
+  resetstudy: () => { if (confirm("Clear all ticked topics and study time?")) { haltTimer(); D.study.done = {}; D.study.spent = {}; T.counted = 0; save(); render(); } },
+  search: () => openSheet("search"),
+  quote: () => openSheet("quote"),
+  closesheet: closeSheet,
+  dosearch: () => { const i = $("#q"); if (i) { runSearch(i.value); i.blur(); } },
+  recent: v => { S.sr = { q: v }; const i = $("#q"); if (i) i.value = v; runSearch(v); },
+  shareq: shareQuote,
+  learn: () => { const q = quoteOfDay(), t = q.s || q.who; S.sheet = "search"; S.sr = { q: t }; renderSheet(); runSearch(t); },
   start: begin, pause, resume, finish,
   newrun: () => { R = fresh(); render(); },
   open: v => { S.open = String(S.open) === v ? null : v; render(); },
@@ -427,8 +797,15 @@ const ACT = {
   },
   test: async () => { S.msg = (await showNote("Your morning briefing is ready.")) ? "" : "Couldn't show a test notification."; render(); },
 };
-document.addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (b && ACT[b.dataset.act]) ACT[b.dataset.act](b.dataset.v); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "bg") { if (e.target === b) closeSheet(); return; }
+  if (ACT[b.dataset.act]) ACT[b.dataset.act](b.dataset.v);
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "q") { runSearch(e.target.value); e.target.blur(); } });
 document.addEventListener("change", e => {
+  const sp = e.target.dataset.sp;
+  if (sp) { if (sp === "hours") D.study.hours = Math.max(0.5, parseFloat(e.target.value) || 4); if (sp === "examDate") D.study.examDate = e.target.value || ""; save(); render(); return; }
   const p = e.target.dataset.pref; if (!p) return;
   if (p === "notifyTime") D.prefs.notifyTime = e.target.value || "07:00";
   if (p === "goalKm") D.prefs.goalKm = Math.max(0.5, parseFloat(e.target.value) || 3.2);
@@ -438,7 +815,7 @@ document.addEventListener("change", e => {
 
 /* ============ start ============ */
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-render(); refreshCurrent(false); checkReminder();
+initTimer(); render(); refreshCurrent(false); checkReminder(); maybeShowQuote();
 </script>
 </body>
 </html>
