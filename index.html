@@ -816,6 +816,18 @@ document.addEventListener("change", e => {
 /* ============ start ============ */
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 initTimer(); render(); refreshCurrent(false); checkReminder(); maybeShowQuote();
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://zbhivigjhrzqflkylwbw.supabase.co";
+const SUPABASE_KEY = "YOUR_PUBLISHABLE_KEY_HERE";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+console.log("Supabase connected successfully!");
 </script>
 </body>
 </html>
